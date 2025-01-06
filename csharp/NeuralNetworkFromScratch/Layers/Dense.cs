@@ -16,7 +16,11 @@ public class Dense : ILayer
 		_activationType = activationType;
 		_weights = new double[inputSize][];
 		for (var i = 0; i < inputSize; i++)
+		{
 			_weights[i] = new double[units];
+			for(var j = 0; j < units; j++)
+				_weights[i][j] = 1.0;
+		}
 		_biases = new double[units];
 
 		if (weights != null && biases != null)
@@ -39,7 +43,11 @@ public class Dense : ILayer
 		_biases = biases;
 	}
 
-	public double[] Forward(double[] x) => Activation.Forward(_activationType, x, _weights, _biases);
+	public double[] Forward(double[] x) =>
+		Activation.Forward(_activationType, x, _weights, _biases);
+
+	public (double[][] dw, double[] db, double[][] dx) Backward(double[] x, double[] o) =>
+		Activation.Backward(_activationType, x, _weights, _biases, o);
 
 	public double[][] Forward(double[][] X) => X.Select(Forward).ToArray();
 }

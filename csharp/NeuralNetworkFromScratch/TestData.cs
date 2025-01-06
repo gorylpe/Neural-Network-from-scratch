@@ -11,12 +11,25 @@ public static class TestData
 		for (var i = 0; i < examples; i++)
 		{
 			var d = rng.NextDouble() * 4 + 11.5; // Roasting duration
-			var t = rng.NextDouble() * (285 - 150) + 150; // Temperature
+			var t = rng.NextDouble() * (275 - 160) + 160; // Temperature
 			var y = -3.0 / (260 - 175) * t + 21;
 			X[i] = [t, d];
 			Y[i] = t is > 175 and < 260 && d is > 12 and < 15 && d <= y ? 1 : 0;
 		}
 
 		return (X, Y);
+	}
+
+	public static (double[][], double[]) LoadLogisticData()
+	{
+		double[][] X = [[0], [1], [2], [3], [4], [5]];
+		double[] Y = [0, 0, 0, 1, 1, 1];
+
+		return (X, Y);
+	}
+
+	public static (double[][], double[]) LoadLinearData()
+	{
+		return ([[1], [2]], [300, 500]);
 	}
 }
