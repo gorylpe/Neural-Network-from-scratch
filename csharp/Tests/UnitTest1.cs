@@ -42,7 +42,7 @@ public class Tests
 	}
 
 	[Test]
-	public void ModelForLinearRegression()
+	public void TestModelForLinearRegression()
 	{
 		var (X, Y) = TestData.LoadLinearData();
 		var model = new Model([
@@ -56,15 +56,17 @@ public class Tests
 	}
 
 	[Test]
-	public void ModelForLogisticRegression()
+	public void TestModelForLogisticRegression()
 	{
 		var (X, Y) = TestData.LoadLogisticData();
 		var model = new Model([
 			new Dense(1, 1, ActivationType.Sigmoid),
 		]);
 
-		// TODO bug why from logits? last layer sigmoid is not calculated?
+		// TODO bug, MeanSquaredError working xd, BinaryCrossEntropy with only DerivativeFromLogits also
+		// model.Fit(X, Y, new MeanSquaredError(), 5000, 0.5);
 		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 5000, 0.5);
+		// model.Fit(X, Y, new BinaryCrossEntropy(), 5000, 0.5);
 		var Yhat = model.Predict(X);
 		Utils.ConsoleWriteYAndYHat(Y, Yhat);
 		var accuracy = Utils.CalculateAndConsoleWriteAccuracy(Yhat, Y);
@@ -72,22 +74,23 @@ public class Tests
 	}
 
 	[Test]
-	public void ModelForCoffeeData()
+	public void TestModelForCoffeeDataUsingLogits()
 	{
 		var (X, Y) = TestData.LoadCoffeeData(400);
 		var norm = new Normalization(2);
 		norm.Adapt(X);
-		var xnorm = norm.Forward(X);
+		var Xnorm = norm.Forward(X);
 
 		var model = new Model([
 			new Dense(3, 2, ActivationType.Sigmoid),
-			new Dense(1, 3, ActivationType.Sigmoid)
+			new Dense(1, 3, ActivationType.Linear)
 		]);
 
-		// TODO bug why from logits? last layer sigmoid is not calculated?
-		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 10000, 0.1);
+		model.Fit(Xnorm, Y, new BinaryCrossEntropy(fromLogits: true), 10000, 0.5);
 
-		var Yhat = model.Predict(xnorm);
+		var Yhat = model.Predict(Xnorm).Select(y => y[0]).ToArray();
+		// Why working without applying sigmoid to output?
+		// Yhat = Activation.Sigmoid(Yhat);
 		Utils.ConsoleWriteYAndYHat(Y, Yhat);
 		var accuracy = Utils.CalculateAndConsoleWriteAccuracy(Yhat, Y);
 		Assert.That(accuracy, Is.GreaterThan(0.95));

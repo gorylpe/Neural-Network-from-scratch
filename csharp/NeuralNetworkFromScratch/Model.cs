@@ -33,10 +33,8 @@ public class Model
 	public double[]   Predict(double[]   x) => _layers.Aggregate(x, (current, layer) => layer.Forward(current));
 	public double[][] Predict(double[][] X) => _layers.Aggregate(X, (current, layer) => layer.Forward(current));
 
-	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16)
+	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10)
 	{
-		const int ProgressLogInterval = 100;
-
 		foreach (var layer in _layers)
 			layer.InitializeWeightsForTraining();
 
@@ -54,7 +52,7 @@ public class Model
 				lAvg = gradients.lAvg;
 			}
 
-			if (ShouldLogProgress(epoch, epochs, ProgressLogInterval))
+			if (ShouldLogProgress(epoch, epochs, progressLogCount))
 			{
 				Console.WriteLine($"Epoch {epoch + 1}\n{this}");
 				Console.WriteLine($"Average loss: {lAvg}");
@@ -195,7 +193,7 @@ public class Model
 		}
 	}
 
-	private static bool ShouldLogProgress(int epoch, int totalEpochs, int interval) => epoch % interval == 0 || epoch == totalEpochs - 1;
+	private static bool ShouldLogProgress(int epoch, int totalEpochs, int count) => epoch % (totalEpochs / count) == 0 || epoch == totalEpochs - 1;
 
 	public override string ToString()
 	{

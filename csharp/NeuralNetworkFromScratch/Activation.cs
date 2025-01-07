@@ -5,22 +5,22 @@ public static class Activation
 	public static double[] Forward(ActivationType activationType, double[] x, double[][] w, double[] b) =>
 		activationType switch
 		{
-			ActivationType.Linear => Linear(x, w, b),
-			ActivationType.Sigmoid => Sigmoid(x, w, b),
-			ActivationType.ReLU => ReLU(x, w, b),
+			ActivationType.Linear  => Linear(x, w, b),
+			ActivationType.Sigmoid => Sigmoid(Linear(x, w, b)),
+			ActivationType.ReLU    => ReLU(Linear(x, w, b)),
 			ActivationType.Softmax => throw new NotImplementedException(),
-			_ => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
+			_                      => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
 		};
 
 	public static (double[][] dw, double[] db, double[][] dx) Backward(ActivationType activationType, double[] x,
-		double[][] w, double[] b, double[] o) =>
+		double[][]                                                                    w,              double[] b, double[] o) =>
 		activationType switch
 		{
-			ActivationType.Linear => LinearDerivative(x, w, b),
-			ActivationType.Sigmoid => SigmoidDerivative(x, w, b, o),
-			ActivationType.ReLU => ReLUDerivative(x, w, b, o),
+			ActivationType.Linear  => LinearDerivative(x, w, b),
+			ActivationType.Sigmoid => SigmoidDerivative(LinearDerivative(x, w, b), o),
+			ActivationType.ReLU    => ReLUDerivative(LinearDerivative(x, w, b), o),
 			ActivationType.Softmax => throw new NotImplementedException(),
-			_ => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
+			_                      => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
 		};
 
 	public static double[] Linear(double[] x, double[][] w, double[] b)
@@ -35,22 +35,19 @@ public static class Activation
 		return o;
 	}
 
-	public static double[] Sigmoid(double[] x, double[][] w, double[] b)
+	public static double[] Sigmoid(double[] o)
 	{
-		var o = Linear(x, w, b);
 		for (var i = 0; i < o.Length; i++)
 			o[i] = 1.0 / (1.0 + Math.Exp(-o[i]));
 		return o;
 	}
 
-	public static double[] ReLU(double[] x, double[][] w, double[] b)
+	public static double[] ReLU(double[] o)
 	{
-		var o = Linear(x, w, b);
 		for (var i = 0; i < o.Length; i++)
 			o[i] = Math.Max(0, o[i]);
 		return o;
 	}
-
 
 	public static (double[][] dw, double[] db, double[][] dx) LinearDerivative(double[] x, double[][] w, double[] b)
 	{
@@ -78,10 +75,9 @@ public static class Activation
 		return (dw, db, dx);
 	}
 
-	public static (double[][] dw, double[] db, double[][] dx) SigmoidDerivative(double[] x, double[][] w, double[] b,
-		double[] o)
+	public static (double[][] dw, double[] db, double[][] dx) SigmoidDerivative((double[][] dw, double[] db, double[][] dx) linearDerivative, double[] o)
 	{
-		var (dw, db, dx) = LinearDerivative(x, w, b);
+		var (dw, db, dx) = linearDerivative;
 		var sd = new double[o.Length];
 		for (var i = 0; i < sd.Length; i++)
 			sd[i] = o[i] * (1 - o[i]);
@@ -102,15 +98,14 @@ public static class Activation
 			dx[i][unit] *= dchain[unit];
 	}
 
-	public static (double[][] dw, double[] db, double[][] dx) ReLUDerivative(double[] x, double[][] w, double[] b,
-		double[] o)
+	public static (double[][] dw, double[] db, double[][] dx) ReLUDerivative((double[][] dw, double[] db, double[][] dx) linearDerivative, double[] o)
 	{
-		var (dw, db, dx) = LinearDerivative(x, w, b);
+		var (dw, db, dx) = linearDerivative;
 		var rd = new double[o.Length];
 		for (var i = 0; i < rd.Length; i++)
 			rd[i] = o[i] > 0 ? 1 : 0;
 
 		ApplyDerivativeChainRule(rd, dw, db, dx);
-		return LinearDerivative(x, w, b);
+		return (dw, db, dx);
 	}
 }

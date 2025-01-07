@@ -33,7 +33,6 @@ class Program
 		norm.Adapt(X);
 		var xnorm = norm.Forward(X);
 
-		// var model = LoadPrecomputed();
 		var model = TrainModel(xnorm, Y);
 
 		for (int i = 0; i < 1; i++)
@@ -58,7 +57,7 @@ class Program
 			new Dense(1, 3, ActivationType.Sigmoid)
 		]);
 
-		model.Fit(X, Y, new MeanSquaredError(), 10000, 0.1);
+		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits:true), 10000, 0.5);
 		return model;
 	}
 

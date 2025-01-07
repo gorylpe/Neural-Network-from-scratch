@@ -4,6 +4,9 @@ public class BinaryCrossEntropy(bool fromLogits = false) : ILossCalc
 {
 	public double Loss(double y, double yHat)
 	{
+		if (fromLogits)
+			return LossLogits(y, yHat);
+
 		yHat = ClampYHatForNumericalStability(yHat);
 		return y switch
 		{
@@ -12,6 +15,8 @@ public class BinaryCrossEntropy(bool fromLogits = false) : ILossCalc
 			_   => throw new ArgumentException("y must be 0 or 1.")
 		};
 	}
+
+	private double LossLogits(double y, double yHat) => Math.Max(yHat, 0) - y * yHat + Math.Log(1 + Math.Exp(-Math.Abs(yHat)));
 
 	public double Derivative(double y, double yHat)
 	{
@@ -27,7 +32,7 @@ public class BinaryCrossEntropy(bool fromLogits = false) : ILossCalc
 		};
 	}
 
-	private double DerivativeLogits(double y, double yHat) => yHat - y;
+	private static double DerivativeLogits(double y, double yHat) => yHat - y;
 
 	private static double ClampYHatForNumericalStability(double yHat) => Math.Clamp(yHat, 1e-15, 1.0 - 1e-15);
 }
