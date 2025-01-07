@@ -49,4 +49,7 @@ public class Normalization(int units, double[]? mean = default, double[]? std = 
 	}
 
 	public double[][] Forward(double[][] X) => X.Select(Forward).ToArray();
+	public void InitializeWeightsForTraining()
+	{
+	}
 }

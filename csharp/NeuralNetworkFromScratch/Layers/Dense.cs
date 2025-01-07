@@ -11,20 +11,40 @@ public class Dense : ILayer
 
 
 	public Dense(int units, int inputSize, ActivationType activationType, double[][]? weights = null,
-		double[]? biases = null)
+		double[]?    biases = null)
 	{
 		_activationType = activationType;
 		_weights = new double[inputSize][];
 		for (var i = 0; i < inputSize; i++)
-		{
 			_weights[i] = new double[units];
-			for(var j = 0; j < units; j++)
-				_weights[i][j] = 1.0;
-		}
 		_biases = new double[units];
 
-		if (weights != null && biases != null)
-			SetWeightsAndBiases(weights, biases);
+		if (weights != null)
+			SetWeights(weights);
+		if (biases != null)
+			SetBiases(biases);
+	}
+
+	public void InitializeWeightsForTraining()
+	{
+		var inputSize = _weights.Length;
+		var units = _weights[0].Length;
+
+		var useXavier = _activationType == ActivationType.Sigmoid;
+
+		var random = new Random();
+		var scale = useXavier
+			? Math.Sqrt(1.0 / inputSize) // Xavier Initialization
+			: Math.Sqrt(2.0 / inputSize); // He Initialization
+		var weights = new double[inputSize][];
+		for (var i = 0; i < inputSize; i++)
+		{
+			weights[i] = new double[units];
+			for (var j = 0; j < units; j++)
+				weights[i][j] = random.NextDouble() * 2 - 1 * scale; // Randomized in range [-scale, scale]
+		}
+
+		SetWeights(weights);
 	}
 
 	public int GetInputSize() => _weights.Length;
@@ -35,11 +55,24 @@ public class Dense : ILayer
 
 	public void SetWeightsAndBiases(double[][] weights, double[] biases)
 	{
+		SetWeights(weights);
+		SetBiases(biases);
+	}
+
+	public void SetWeights(double[][] weights)
+	{
 		if (weights.Length != GetInputSize())
 			throw new ArgumentException("Weight size must be equal to input size. (number of features)");
 		if (weights[0].Length != GetUnits())
 			throw new ArgumentException("Single weight size must be equal to number of units.");
 		_weights = weights;
+	}
+
+	public void SetBiases(double[] biases)
+	{
+		if (biases.Length != GetUnits())
+			throw new ArgumentException("Biases size must be equal to number of units.");
+
 		_biases = biases;
 	}
 

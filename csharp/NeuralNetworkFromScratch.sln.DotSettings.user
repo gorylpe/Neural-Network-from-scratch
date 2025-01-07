@@ -4,5 +4,7 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a4178317_002D7555_002D4954_002Db41e_002Da8a1e4c5f564/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestCoffeeDataWithPrecomputedWeights" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net8.0::Tests.Tests.TestCoffeeDataWithPrecomputedWeights&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net8.0::Tests.Tests.ModelForLinearRegression&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net8.0::Tests.Tests.ModelForLogisticRegression&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

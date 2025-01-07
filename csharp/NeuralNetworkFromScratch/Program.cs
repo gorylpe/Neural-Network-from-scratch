@@ -1,4 +1,5 @@
 ﻿using NeuralNetworkFromScratch.Layers;
+using NeuralNetworkFromScratch.Loss;
 
 namespace NeuralNetworkFromScratch;
 
@@ -6,30 +7,18 @@ class Program
 {
 	static void Main(string[] args)
 	{
-		// ModelForLinearRegression();
-		ModelForLogisticRegression();
-		// ModelForCoffeeData();
-	}
-
-	private static void ModelForLinearRegression()
-	{
-		var (X, Y) = TestData.LoadLinearData();
-		var model = new Model([
-			new Dense(1, 1, ActivationType.Linear)
-		]);
-		model.Fit(X, Y, 1000, 0.01);
-		var Yhat = model.Predict(X);
-		Console.WriteLine(string.Join("; ", Y.Zip(Yhat.Select(x => x[0])).Select(x => $"{x.Item1} -> {x.Item2:F2}")));
+		// ModelForLogisticRegression();
+		ModelForCoffeeData();
 	}
 
 	private static void ModelForLogisticRegression()
 	{
 		var (X, Y) = TestData.LoadLogisticData();
 		var model = new Model([
-			// new Dense(1, 1, ActivationType.Sigmoid),
+			new Dense(1, 1, ActivationType.Sigmoid),
 			new Dense(1, 1, ActivationType.Sigmoid),
 		]);
-		model.Fit(X, Y, 10000, 0.01);
+		model.Fit(X, Y, new BinaryCrossEntropy(), 5000, 0.5);
 		var Yhat = model.Predict(X);
 		Console.WriteLine(string.Join("; ", Y.Zip(Yhat.Select(x => x[0])).Select(x => $"{x.Item1} -> {x.Item2:F2}")));
 		var errors = Yhat.Select((yhat, i) => (yhat[0] > 0.5 ? 1 : 0) == Y[i]).Count(x => !x);
@@ -69,7 +58,7 @@ class Program
 			new Dense(1, 3, ActivationType.Sigmoid)
 		]);
 
-		model.Fit(X, Y, 100, 0.1);
+		model.Fit(X, Y, new MeanSquaredError(), 10000, 0.1);
 		return model;
 	}
 
