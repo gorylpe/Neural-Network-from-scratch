@@ -4,7 +4,8 @@ namespace NeuralNetworkFromScratch;
 
 public static class Activation
 {
-	private const double LeakyReLUAlpha = 0.01;
+	private const double SigmoidThreshold = 5; // Prevent gradient vanishing
+	private const double LeakyReLUAlpha   = 0.01;
 
 	public static double[] Forward(ActivationType activationType, double[] x, double[][] w, double[] b, double[] outputCache)
 	{
@@ -54,7 +55,7 @@ public static class Activation
 		return o;
 	}
 
-	public static double Sigmoid(double o) => 1.0 / (1.0 + Math.Exp(Math.Clamp(-o, -5, 5)));
+	public static double Sigmoid(double o) => 1.0 / (1.0 + Math.Exp(Math.Clamp(-o, -SigmoidThreshold, SigmoidThreshold)));
 
 	public static double[] ReLU(double[] o)
 	{
