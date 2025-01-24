@@ -1,18 +1,21 @@
 ﻿using System.Numerics;
+using NeuralNetworkFromScratch.Regularizers;
 
 namespace NeuralNetworkFromScratch.Layers;
 
 public class Dense : ILayer
 {
-	private readonly ActivationType _activationType;
+	private readonly ActivationType      _activationType;
+	private readonly IKernelRegularizer? _kernelRegularizer;
 
 	private double[][] _weights;
-	private double[] _biases;
+	private double[]   _biases;
 
-	public Dense(int units, int inputSize, ActivationType activationType, double[][]? weights = null,
-		double[]? biases = null)
+	public Dense(int units,         int                 inputSize, ActivationType activationType, double[][]? weights = null,
+		double[]?    biases = null, IKernelRegularizer? kernelRegularizer = null)
 	{
 		_activationType = activationType;
+		_kernelRegularizer = kernelRegularizer;
 		_weights = new double[inputSize][];
 		for (var i = 0; i < inputSize; i++)
 			_weights[i] = new double[units];
@@ -24,14 +27,14 @@ public class Dense : ILayer
 			SetBiases(biases);
 	}
 
-	public void InitializeWeightsForTraining()
+	public void InitializeWeightsForTraining(Random? random = null)
 	{
+		random ??= new Random();
 		var inputSize = _weights.Length;
 		var units = _weights[0].Length;
 
 		var useXavier = _activationType == ActivationType.Sigmoid;
 
-		var random = new Random();
 		var scale = useXavier
 			? Math.Sqrt(1.0 / inputSize) // Xavier Initialization
 			: Math.Sqrt(2.0 / inputSize); // He Initialization
@@ -47,10 +50,10 @@ public class Dense : ILayer
 	}
 
 	public int GetInputSize() => _weights.Length;
-	public int GetUnits() => _weights[0].Length;
+	public int GetUnits()     => _weights[0].Length;
 
 	public double[][] GetWeights() => _weights;
-	public double[] GetBiases() => _biases;
+	public double[]   GetBiases()  => _biases;
 
 	public void SetWeightsAndBiases(double[][] weights, double[] biases)
 	{
@@ -75,17 +78,19 @@ public class Dense : ILayer
 		_biases = biases;
 	}
 
-public double[] Forward(double[] x) => Forward(x, new double[GetUnits()]);
-    public double[] Forward(double[] x, double[] outputCache) => Activation.Forward(_activationType, x, _weights, _biases, outputCache);
-
-    public (double[][] dw, double[] db, double[][] dx) Backward(double[] x, double[] o, LayerCache cache)
+	public (double RegularizationLoss, double[] Activations) Forward(double[] x, double[] outputCache)
 	{
-		// Use pre-allocated cache arrays
-		var (dw, db, dx) = Activation.Backward(_activationType, x, _weights, _biases, o, cache.Dw, cache.Db, cache.Dx);
-		return (dw, db, dx);
+		return (_kernelRegularizer?.Loss(_weights) ?? 0.0,
+			Activation.Forward(_activationType, x, _weights, _biases, outputCache));
 	}
 
-	public double[][] Forward(double[][] X) => X.Select(Forward).ToArray();
+	public (double RegularizationLoss, double[] Activations) Forward(double[] x) => Forward(x, new double[GetUnits()]);
 
-	public LayerCache CreateCache() => new LayerCache(GetInputSize(), GetUnits());
+	public void Backward(double[] x, double[] o, LayerCache cache)
+	{
+		_kernelRegularizer?.Regularize(cache.DwRegularization, _weights);
+		Activation.Backward(_activationType, x, _weights, _biases, o, cache.Dw, cache.Db, cache.Dx);
+	}
+
+	public LayerCache CreateCache() => new(GetInputSize(), GetUnits());
 }

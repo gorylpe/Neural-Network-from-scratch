@@ -4,7 +4,7 @@ namespace NeuralNetworkFromScratch.Layers;
 
 public interface ILayer
 {
-	double[]   Forward(double[]   x);
-	double[][] Forward(double[][] X);
-	void       InitializeWeightsForTraining();
+	void InitializeWeightsForTraining(Random? random = null);
+
+	(double RegularizationLoss, double[] Activations) Forward(double[] x);
 }

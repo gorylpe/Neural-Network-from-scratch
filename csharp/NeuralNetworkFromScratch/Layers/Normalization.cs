@@ -40,16 +40,15 @@ public class Normalization(int units, double[]? mean = default, double[]? std = 
 		_std = std;
 	}
 
-	public double[] Forward(double[] x)
+	public (double RegularizationLoss, double[] Activations) Forward(double[] x)
 	{
 		var o = new double[x.Length];
 		for (var i = 0; i < x.Length; i++)
 			o[i] = (x[i] - _mean[i]) / _std[i];
-		return o;
+		return (0.0, o);
 	}
 
-	public double[][] Forward(double[][] X) => X.Select(Forward).ToArray();
-	public void InitializeWeightsForTraining()
+	public void InitializeWeightsForTraining(Random? random = null)
 	{
 	}
 }

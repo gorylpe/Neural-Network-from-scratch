@@ -2,10 +2,11 @@
 
 public class LayerCache
 {
-	public double[]   ForwardOutput { get; }
-	public double[][] Dw            { get; }
-	public double[]   Db            { get; }
-	public double[][] Dx            { get; }
+	public double[]   ForwardOutput    { get; }
+	public double[][] Dw               { get; }
+	public double[]   Db               { get; }
+	public double[][] Dx               { get; }
+	public double[][] DwRegularization { get; }
 
 	public LayerCache(int inputSize, int units)
 	{
@@ -17,5 +18,8 @@ public class LayerCache
 		Dx = new double[inputSize][];
 		for (var i = 0; i < inputSize; i++)
 			Dx[i] = new double[units];
+		DwRegularization = new double[inputSize][];
+		for (var i = 0; i < inputSize; i++)
+			DwRegularization[i] = new double[units];
 	}
 }

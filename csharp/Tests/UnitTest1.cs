@@ -1,6 +1,7 @@
 using NeuralNetworkFromScratch;
 using NeuralNetworkFromScratch.Layers;
 using NeuralNetworkFromScratch.Loss;
+using NeuralNetworkFromScratch.Regularizers;
 using NumSharp;
 
 namespace Tests;
@@ -16,7 +17,7 @@ public class Tests
 		var (X, Y) = TestData.LoadCoffeeData(examples, seed);
 		var norm = new Normalization(2);
 		norm.Adapt(X);
-		var xnorm = norm.Forward(X);
+		var xnorm = X.Select(x => norm.Forward(x).Activations).ToArray();
 
 		var model = new Model([
 			new Dense(3, 2, ActivationType.Sigmoid),
@@ -93,14 +94,14 @@ public class Tests
 		var (X, Y) = TestData.LoadCoffeeData(400);
 		var norm = new Normalization(2);
 		norm.Adapt(X);
-		var Xnorm = norm.Forward(X);
+		var Xnorm = X.Select(x => norm.Forward(x).Activations).ToArray();
 
 		var model = new Model([
 			new Dense(3, 2, ActivationType.Sigmoid),
 			new Dense(1, 3, ActivationType.Linear)
-		]);
+		], random: new Random(1234));
 
-		model.Fit(Xnorm, Y, new BinaryCrossEntropy(fromLogits: true), 5000, 0.5);
+		model.Fit(Xnorm, Y, new BinaryCrossEntropy(fromLogits: true), 2500, 0.05);
 
 		var Yhat = model.Predict(Xnorm).Select(y => y[0]).ToArray();
 		Yhat = Activation.Sigmoid(Yhat);
