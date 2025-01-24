@@ -29,12 +29,12 @@ class Program
 		var Y = Ynp.ToArray<byte>().Select(Convert.ToDouble).ToArray();
 		
 		var model = new Model([
-			new Dense(25, 400, ActivationType.Sigmoid),
-			new Dense(15, 25, ActivationType.Sigmoid),
-			new Dense(1, 15, ActivationType.Sigmoid)
+			new Dense(25, 400, ActivationType.ReLU),
+			new Dense(15, 25, ActivationType.ReLU),
+			new Dense(1, 15, ActivationType.Linear)
 		]);
 
-		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 50000, 0.5, progressLogCount: 500);
+		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 100, 0.1, 128);
 
 		var Yhat = model.Predict(X).Select(y => y[0]).ToArray();
 		Utils.ConsoleWriteYAndYHat(Y, Yhat);

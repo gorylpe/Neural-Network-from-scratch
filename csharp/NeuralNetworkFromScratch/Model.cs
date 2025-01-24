@@ -67,13 +67,13 @@ public class Model
 		var dbTotalExamples = new List<double[][]>();
 		var lossTotalExamples = new List<double>();
 
-		foreach (var (x, y) in X.Zip(Y))
+		Parallel.For(0, X.Length, i =>
 		{
-			var (loss, dwTotal, dbTotal) = ComputeLossAndDerivatives(x, y, lossCalc);
-			dwTotalExamples.Add(dwTotal);
-			dbTotalExamples.Add(dbTotal);
-			lossTotalExamples.Add(loss);
-		}
+			var (loss, dwTotal, dbTotal) = ComputeLossAndDerivatives(X[i], Y[i], lossCalc);
+			lock (dwTotalExamples) dwTotalExamples.Add(dwTotal);
+			lock (dbTotalExamples) dbTotalExamples.Add(dbTotal);
+			lock (lossTotalExamples) lossTotalExamples.Add(loss);
+		});
 
 		var dwAvg = AverageWeightsGradient(dwTotalExamples);
 		var dbAvg = AverageBiasesGradient(dbTotalExamples);

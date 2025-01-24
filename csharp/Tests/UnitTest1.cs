@@ -157,7 +157,7 @@ public class Tests
 			new Dense(1, 15, ActivationType.Linear)
 		]);
 
-		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 100, 0.1);
+		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 100, 0.01, 64);
 
 		var Yhat = model.Predict(X).Select(y => y[0]).ToArray();
 		Yhat = Activation.Sigmoid(Yhat);
