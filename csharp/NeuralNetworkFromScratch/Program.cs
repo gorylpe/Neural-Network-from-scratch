@@ -1,5 +1,6 @@
 ﻿using NeuralNetworkFromScratch.Layers;
 using NeuralNetworkFromScratch.Loss;
+using NumSharp;
 
 namespace NeuralNetworkFromScratch;
 
@@ -7,75 +8,36 @@ class Program
 {
 	static void Main(string[] args)
 	{
-		// ModelForLogisticRegression();
-		ModelForCoffeeData();
+		Mnist1();
 	}
 
-	private static void ModelForLogisticRegression()
+	private static void Mnist1()
 	{
-		var (X, Y) = TestData.LoadLogisticData();
-		var model = new Model([
-			new Dense(1, 1, ActivationType.Sigmoid),
-			new Dense(1, 1, ActivationType.Sigmoid),
-		]);
-		model.Fit(X, Y, new BinaryCrossEntropy(), 5000, 0.5);
-		var Yhat = model.Predict(X);
-		Console.WriteLine(string.Join("; ", Y.Zip(Yhat.Select(x => x[0])).Select(x => $"{x.Item1} -> {x.Item2:F2}")));
-		var errors = Yhat.Select((yhat, i) => (yhat[0] > 0.5 ? 1 : 0) == Y[i]).Count(x => !x);
-		var accuracy = 1.0 - 1.0 * errors / Y.Length;
-		Console.WriteLine($"Accuracy: {accuracy:P}, {errors} errors out of {Y.Length} examples");
-	}
+		var Xnp = np.load("data/mnist_1/X.npy");
+		var rows = Xnp.shape[0];
+		var cols = Xnp.shape[1];
+		var Xflat = Xnp.ToArray<double>();
 
-	private static void ModelForCoffeeData()
-	{
-		var (X, Y) = TestData.LoadCoffeeData(400);
-		var norm = new Normalization(2);
-		norm.Adapt(X);
-		var xnorm = norm.Forward(X);
-
-		var model = TrainModel(xnorm, Y);
-
-		for (int i = 0; i < 1; i++)
+		var X = new double[rows][];
+		for (var i = 0; i < rows; i++)
 		{
-			var xreal = X[i];
-			var x = xnorm[i];
-			var y = Y[i];
-			var yhat = model.Predict(x)[0] > 0.5 ? 1 : 0;
-			Console.WriteLine($"{(y != yhat ? "ERROR " : "")}y = {y}, yhat = {yhat}, x = {xreal.PrettyString()}");
+			X[i] = new double[cols];
+			Array.Copy(Xflat, i * cols, X[i], 0, cols);
 		}
 
-		var Yhat = model.Predict(xnorm);
-		var errors = Yhat.Select((yhat, i) => (yhat[0] > 0.5 ? 1 : 0) == Y[i]).Count(x => !x);
-		var accuracy = 1.0 - 1.0 * errors / Y.Length;
-		Console.WriteLine($"Accuracy: {accuracy:P}, {errors} errors out of {Y.Length} examples");
-	}
-
-	private static Model TrainModel(double[][] X, double[] Y)
-	{
+		var Ynp = np.load("data/mnist_1/y.npy");
+		var Y = Ynp.ToArray<byte>().Select(Convert.ToDouble).ToArray();
+		
 		var model = new Model([
-			new Dense(3, 2, ActivationType.Sigmoid),
-			new Dense(1, 3, ActivationType.Sigmoid)
+			new Dense(25, 400, ActivationType.Sigmoid),
+			new Dense(15, 25, ActivationType.Sigmoid),
+			new Dense(1, 15, ActivationType.Sigmoid)
 		]);
 
-		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits:true), 10000, 0.5);
-		return model;
-	}
+		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 50000, 0.5, progressLogCount: 500);
 
-	private static Model LoadPrecomputed()
-	{
-		return new Model(
-		[
-			new Dense(3, 2, ActivationType.Sigmoid, [
-					[-8.94, 0.29, 12.89],
-					[-0.17, -7.34, 10.79]
-				],
-				[-9.87, -9.28, 1.01]),
-			new Dense(1, 3, ActivationType.Sigmoid, [
-					[-31.38],
-					[-27.86],
-					[-32.79]
-				],
-				[15.54])
-		]);
+		var Yhat = model.Predict(X).Select(y => y[0]).ToArray();
+		Utils.ConsoleWriteYAndYHat(Y, Yhat);
+		var accuracy = Utils.CalculateAndConsoleWriteAccuracy(Y, Yhat);
 	}
 }

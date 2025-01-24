@@ -9,10 +9,10 @@ public static class Utils
 		Console.WriteLine(string.Join("; ", Y.Zip(Yhat).Select(x => $"{x.Item1} -> {x.Item2:F2}")));
 
 
-	public static double CalculateAndConsoleWriteAccuracy(double[][] Yhat, double[] Y) =>
+	public static double CalculateAndConsoleWriteAccuracy(double[] Y, double[][] Yhat) =>
 		CalculateAndConsoleWriteAccuracy(Y, Yhat.Select(x => x[0]).ToArray());
 
-	public static double CalculateAndConsoleWriteAccuracy(double[] Yhat, double[] Y)
+	public static double CalculateAndConsoleWriteAccuracy(double[] Y, double[] Yhat)
 	{
 		var errors = Yhat.Select((yhat, i) => (yhat > 0.5 ? 1 : 0) == Y[i]).Count(x => !x);
 		var accuracy = 1.0 - 1.0 * errors / Y.Length;

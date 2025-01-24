@@ -38,9 +38,11 @@ public static class Activation
 	public static double[] Sigmoid(double[] o)
 	{
 		for (var i = 0; i < o.Length; i++)
-			o[i] = 1.0 / (1.0 + Math.Exp(-o[i]));
+			o[i] = Sigmoid(o[i]);
 		return o;
 	}
+
+	public static double Sigmoid(double o) => 1.0 / (1.0 + Math.Exp(-o));
 
 	public static double[] ReLU(double[] o)
 	{

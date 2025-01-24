@@ -30,7 +30,7 @@ public class Model
 
 	public Dense GetLayer(int index) => _layers[index];
 
-	public double[]   Predict(double[]   x) => _layers.Aggregate(x, (current, layer) => layer.Forward(current));
+	public double[] Predict(double[] x) => _layers.Aggregate(x, (current, layer) => layer.Forward(current));
 	public double[][] Predict(double[][] X) => _layers.Aggregate(X, (current, layer) => layer.Forward(current));
 
 	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10)
@@ -54,7 +54,8 @@ public class Model
 
 			if (ShouldLogProgress(epoch, epochs, progressLogCount))
 			{
-				Console.WriteLine($"Epoch {epoch + 1}\n{this}");
+				Console.WriteLine($"Epoch {epoch + 1}");
+				// Console.WriteLine(this.ToString());
 				Console.WriteLine($"Average loss: {lAvg}");
 			}
 		}
@@ -117,8 +118,8 @@ public class Model
 		var dxSum = new double[dx.Length];
 
 		for (var i = 0; i < dw.Length; i++)
-		for (var unit = 0; unit < dw[i].Length; unit++)
-			dw[i][unit] *= dxSumPrevious[unit];
+			for (var unit = 0; unit < dw[i].Length; unit++)
+				dw[i][unit] *= dxSumPrevious[unit];
 
 		for (var unit = 0; unit < db.Length; unit++)
 			db[unit] *= dxSumPrevious[unit];
@@ -145,13 +146,13 @@ public class Model
 			foreach (var example in dwTotalExamples)
 			{
 				for (var i = 0; i < layerShape.Length; i++)
-				for (var unit = 0; unit < layerShape[i].Length; unit++)
-					avgGradients[layer][i][unit] += example[layer][i][unit];
+					for (var unit = 0; unit < layerShape[i].Length; unit++)
+						avgGradients[layer][i][unit] += example[layer][i][unit];
 			}
 
 			for (var i = 0; i < avgGradients[layer].Length; i++)
-			for (var unit = 0; unit < avgGradients[layer][i].Length; unit++)
-				avgGradients[layer][i][unit] /= dwTotalExamples.Count;
+				for (var unit = 0; unit < avgGradients[layer][i].Length; unit++)
+					avgGradients[layer][i][unit] /= dwTotalExamples.Count;
 		}
 
 		return avgGradients;
@@ -185,8 +186,8 @@ public class Model
 			var layerBiases = _layers[layer].GetBiases();
 
 			for (var i = 0; i < layerWeights.Length; i++)
-			for (var unit = 0; unit < layerWeights[i].Length; unit++)
-				layerWeights[i][unit] -= learningRate * dwAvg[layer][i][unit];
+				for (var unit = 0; unit < layerWeights[i].Length; unit++)
+					layerWeights[i][unit] -= learningRate * dwAvg[layer][i][unit];
 
 			for (var unit = 0; unit < layerBiases.Length; unit++)
 				layerBiases[unit] -= learningRate * dbAvg[layer][unit];
