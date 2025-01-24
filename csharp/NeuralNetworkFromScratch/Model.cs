@@ -8,6 +8,7 @@ namespace NeuralNetworkFromScratch;
 public class Model
 {
 	private readonly List<Dense> _layers;
+	private List<LayerCache[]> _batchCaches;
 
 	public Model(List<Dense> layers)
 	{
@@ -33,76 +34,51 @@ public class Model
 	public double[] Predict(double[] x) => _layers.Aggregate(x, (current, layer) => layer.Forward(current));
 	public double[][] Predict(double[][] X) => _layers.Aggregate(X, (current, layer) => layer.Forward(current));
 
-	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10)
+	public void InitializeCaches(int batchSize)
 	{
+		_batchCaches = new List<LayerCache[]>();
 		foreach (var layer in _layers)
-			layer.InitializeWeightsForTraining();
-
-		for (var epoch = 0; epoch < epochs; epoch++)
 		{
-			var lAvg = 0.0;
-			for (var batchStart = 0; batchStart < X.Length; batchStart += batchSize)
-			{
-				var batchEnd = Math.Min(batchStart + batchSize, X.Length);
-				var xBatch = X[batchStart..batchEnd];
-				var yBatch = Y[batchStart..batchEnd];
-
-				var gradients = ComputeGradients(xBatch, yBatch, lossCalc);
-				UpdateWeightsAndBiasesByGradientDescent(gradients.dwAvg, gradients.dbAvg, learningRate);
-				lAvg = gradients.lAvg;
-			}
-
-			if (ShouldLogProgress(epoch, epochs, progressLogCount))
-			{
-				Console.WriteLine($"Epoch {epoch + 1}");
-				// Console.WriteLine(this.ToString());
-				Console.WriteLine($"Average loss: {lAvg}");
-			}
+			var layerCaches = new LayerCache[batchSize];
+			for (int i = 0; i < batchSize; i++)
+				layerCaches[i] = layer.CreateCache();
+			_batchCaches.Add(layerCaches);
 		}
 	}
 
-	private (double[][][] dwAvg, double[][] dbAvg, double lAvg) ComputeGradients(double[][] X, double[] Y, ILossCalc lossCalc)
+	private (double loss, double[][][] dwTotal, double[][] dbTotal) ComputeLossAndDerivatives(double[] x, double y, ILossCalc lossCalc, int exampleIndex)
 	{
-		var dwTotalExamples = new List<double[][][]>();
-		var dbTotalExamples = new List<double[][]>();
-		var lossTotalExamples = new List<double>();
-
-		Parallel.For(0, X.Length, i =>
-		{
-			var (loss, dwTotal, dbTotal) = ComputeLossAndDerivatives(X[i], Y[i], lossCalc);
-			lock (dwTotalExamples) dwTotalExamples.Add(dwTotal);
-			lock (dbTotalExamples) dbTotalExamples.Add(dbTotal);
-			lock (lossTotalExamples) lossTotalExamples.Add(loss);
-		});
-
-		var dwAvg = AverageWeightsGradient(dwTotalExamples);
-		var dbAvg = AverageBiasesGradient(dbTotalExamples);
-		var lAvg = lossTotalExamples.Average();
-
-		return (dwAvg, dbAvg, lAvg);
-	}
-
-	private (double loss, double[][][] dwTotal, double[][] dbTotal) ComputeLossAndDerivatives(double[] x, double y, ILossCalc lossCalc)
-	{
-		var activations = ForwardPass(x);
+		var activations = ForwardPass(x, exampleIndex);
 		var loss = lossCalc.Loss(y, activations[^1][0]);
 		var dl = lossCalc.Derivative(y, activations[^1][0]);
-		var (dwTotal, dbTotal) = BackwardPass(x, activations, dl);
+		var (dwTotal, dbTotal) = BackwardPass(x, activations, dl, exampleIndex);
 		return (loss, dwTotal, dbTotal);
 	}
 
-	private double[][] ForwardPass(double[] x) => _layers.Select((layer, _) => x = layer.Forward(x)).ToArray();
+	private double[][] ForwardPass(double[] x, int exampleIndex)
+	{
+		var activations = new double[_layers.Count][];
+		for (var i = 0; i < _layers.Count; i++)
+		{
+			var layer = _layers[i];
+			var cache = _batchCaches[i][exampleIndex];
+			activations[i] = layer.Forward(x, cache.ForwardOutput);
+			x = activations[i];
+		}
+		return activations;
+	}
 
-	private (double[][][] dwTotal, double[][] dbTotal) BackwardPass(double[] x, double[][] activations, double dl)
+	private (double[][][] dwTotal, double[][] dbTotal) BackwardPass(double[] x, double[][] activations, double dl, int exampleIndex)
 	{
 		var dwTotal = new double[_layers.Count][][];
 		var dbTotal = new double[_layers.Count][];
-		var dxSumPrevious = Enumerable.Repeat(dl, activations[^1].Length).ToArray(); // Use loss derivative for last layer
+		var dxSumPrevious = Enumerable.Repeat(dl, activations[^1].Length).ToArray();
 
 		for (var layer = _layers.Count - 1; layer >= 0; layer--)
 		{
 			var input = layer == 0 ? x : activations[layer - 1];
-			var (dw, db, dx) = _layers[layer].Backward(input, activations[layer]);
+			var cache = _batchCaches[layer][exampleIndex];
+			var (dw, db, dx) = _layers[layer].Backward(input, activations[layer], cache);
 
 			dxSumPrevious = ApplyDerivatives(dw, db, dx, dxSumPrevious);
 
@@ -213,5 +189,56 @@ public class Model
 		}
 
 		return sb.ToString();
+	}
+
+	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10)
+	{
+		foreach (var layer in _layers)
+			layer.InitializeWeightsForTraining();
+
+		InitializeCaches(batchSize);
+
+		for (var epoch = 0; epoch < epochs; epoch++)
+		{
+			var lAvg = 0.0;
+			for (var batchStart = 0; batchStart < X.Length; batchStart += batchSize)
+			{
+				var batchEnd = Math.Min(batchStart + batchSize, X.Length);
+				var xBatch = X[batchStart..batchEnd];
+				var yBatch = Y[batchStart..batchEnd];
+
+				var gradients = ComputeGradients(xBatch, yBatch, lossCalc);
+				UpdateWeightsAndBiasesByGradientDescent(gradients.dwAvg, gradients.dbAvg, learningRate);
+				lAvg = gradients.lAvg;
+			}
+
+			if (ShouldLogProgress(epoch, epochs, progressLogCount))
+			{
+				Console.WriteLine($"Epoch {epoch + 1}");
+				// Console.WriteLine(this.ToString());
+				Console.WriteLine($"Average loss: {lAvg}");
+			}
+		}
+	}
+
+	private (double[][][] dwAvg, double[][] dbAvg, double lAvg) ComputeGradients(double[][] X, double[] Y, ILossCalc lossCalc)
+	{
+		var dwTotalExamples = new List<double[][][]>();
+		var dbTotalExamples = new List<double[][]>();
+		var lossTotalExamples = new List<double>();
+
+		Parallel.For(0, X.Length, i =>
+		{
+			var (loss, dwTotal, dbTotal) = ComputeLossAndDerivatives(X[i], Y[i], lossCalc, i);
+			lock (dwTotalExamples) dwTotalExamples.Add(dwTotal);
+			lock (dbTotalExamples) dbTotalExamples.Add(dbTotal);
+			lock (lossTotalExamples) lossTotalExamples.Add(loss);
+		});
+
+		var dwAvg = AverageWeightsGradient(dwTotalExamples);
+		var dbAvg = AverageBiasesGradient(dbTotalExamples);
+		var lAvg = lossTotalExamples.Average();
+
+		return (dwAvg, dbAvg, lAvg);
 	}
 }

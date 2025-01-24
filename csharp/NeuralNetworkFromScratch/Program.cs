@@ -34,9 +34,10 @@ class Program
 			new Dense(1, 15, ActivationType.Linear)
 		]);
 
-		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 100, 0.1, 128);
+		model.Fit(X, Y, new BinaryCrossEntropy(fromLogits: true), 100, 0.03, 128);
 
 		var Yhat = model.Predict(X).Select(y => y[0]).ToArray();
+		Activation.Sigmoid(Yhat);
 		Utils.ConsoleWriteYAndYHat(Y, Yhat);
 		var accuracy = Utils.CalculateAndConsoleWriteAccuracy(Y, Yhat);
 	}

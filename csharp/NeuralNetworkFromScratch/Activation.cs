@@ -1,38 +1,42 @@
-﻿namespace NeuralNetworkFromScratch;
+﻿using NumSharp;
+
+namespace NeuralNetworkFromScratch;
 
 public static class Activation
 {
-	public static double[] Forward(ActivationType activationType, double[] x, double[][] w, double[] b) =>
+	public static double[] Forward(ActivationType activationType, double[] x, double[][] w, double[] b, double[] outputCache) =>
 		activationType switch
 		{
-			ActivationType.Linear  => Linear(x, w, b),
-			ActivationType.Sigmoid => Sigmoid(Linear(x, w, b)),
-			ActivationType.ReLU    => ReLU(Linear(x, w, b)),
+			ActivationType.Linear => Linear(x, w, b, outputCache),
+			ActivationType.Sigmoid => Sigmoid(Linear(x, w, b, outputCache)),
+			ActivationType.ReLU => ReLU(Linear(x, w, b, outputCache)),
 			ActivationType.Softmax => throw new NotImplementedException(),
-			_                      => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
+			_ => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
 		};
 
 	public static (double[][] dw, double[] db, double[][] dx) Backward(ActivationType activationType, double[] x,
-		double[][]                                                                    w,              double[] b, double[] o) =>
-		activationType switch
+		double[][] w, double[] b, double[] o, double[][] dwCache, double[] dbCache, double[][] dxCache)
+	{
+		return activationType switch
 		{
-			ActivationType.Linear  => LinearDerivative(x, w, b),
-			ActivationType.Sigmoid => SigmoidDerivative(LinearDerivative(x, w, b), o),
-			ActivationType.ReLU    => ReLUDerivative(LinearDerivative(x, w, b), o),
+			ActivationType.Linear => LinearDerivative(x, w, b, dwCache, dbCache, dxCache),
+			ActivationType.Sigmoid => SigmoidDerivative(LinearDerivative(x, w, b, dwCache, dbCache, dxCache), o),
+			ActivationType.ReLU => ReLUDerivative(LinearDerivative(x, w, b, dwCache, dbCache, dxCache), o),
 			ActivationType.Softmax => throw new NotImplementedException(),
-			_                      => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
+			_ => throw new ArgumentOutOfRangeException(nameof(activationType), activationType, null)
 		};
+	}
 
-	public static double[] Linear(double[] x, double[][] w, double[] b)
+	public static double[] Linear(double[] x, double[][] w, double[] b, double[] outputCache)
 	{
 		// todo use np.matmul(A_in, W) + B
+		Array.Copy(b, outputCache, outputCache.Length);
 		var oLen = w[0].Length;
-		var o = (double[])b.Clone();
 		for (var i = 0; i < x.Length; i++)
-		for (var j = 0; j < oLen; j++)
-			o[j] += x[i] * w[i][j];
+			for (var j = 0; j < oLen; j++)
+				outputCache[j] += x[i] * w[i][j];
 
-		return o;
+		return outputCache;
 	}
 
 	public static double[] Sigmoid(double[] o)
@@ -51,30 +55,25 @@ public static class Activation
 		return o;
 	}
 
-	public static (double[][] dw, double[] db, double[][] dx) LinearDerivative(double[] x, double[][] w, double[] b)
+	public static (double[][] dw, double[] db, double[][] dx) LinearDerivative(double[] x, double[][] w, double[] b,
+		double[][] dwCache, double[] dbCache, double[][] dxCache)
 	{
-		var dw = new double[w.Length][];
-		var db = new double[b.Length];
-		var dx = new double[x.Length][];
-
-		for (var i = 0; i < dw.Length; i++)
+		for (var i = 0; i < dwCache.Length; i++)
 		{
-			dw[i] = new double[w[i].Length];
 			for (var unit = 0; unit < w[i].Length; unit++)
-				dw[i][unit] = x[i];
+				dwCache[i][unit] = x[i];
 		}
 
 		for (var i = 0; i < b.Length; i++)
-			db[i] = 1;
+			dbCache[i] = 1;
 
 		for (var i = 0; i < x.Length; i++)
 		{
-			dx[i] = new double[w[i].Length];
 			for (var unit = 0; unit < w[i].Length; unit++)
-				dx[i][unit] = w[i][unit];
+				dxCache[i][unit] = w[i][unit];
 		}
 
-		return (dw, db, dx);
+		return (dwCache, dbCache, dxCache);
 	}
 
 	public static (double[][] dw, double[] db, double[][] dx) SigmoidDerivative((double[][] dw, double[] db, double[][] dx) linearDerivative, double[] o)
@@ -91,13 +90,13 @@ public static class Activation
 	private static void ApplyDerivativeChainRule(double[] dchain, double[][] dw, double[] db, double[][] dx)
 	{
 		for (var i = 0; i < dw.Length; i++)
-		for (var unit = 0; unit < dw[i].Length; unit++)
-			dw[i][unit] *= dchain[unit];
+			for (var unit = 0; unit < dw[i].Length; unit++)
+				dw[i][unit] *= dchain[unit];
 		for (var unit = 0; unit < db.Length; unit++)
 			db[unit] *= dchain[unit];
 		for (var i = 0; i < dx.Length; i++)
-		for (var unit = 0; unit < dx[i].Length; unit++)
-			dx[i][unit] *= dchain[unit];
+			for (var unit = 0; unit < dx[i].Length; unit++)
+				dx[i][unit] *= dchain[unit];
 	}
 
 	public static (double[][] dw, double[] db, double[][] dx) ReLUDerivative((double[][] dw, double[] db, double[][] dx) linearDerivative, double[] o)

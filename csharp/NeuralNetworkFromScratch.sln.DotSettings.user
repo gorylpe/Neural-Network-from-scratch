@@ -10,5 +10,7 @@
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForLogisticRegression&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForLogisticRegressionFromLogits&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForMnist1&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestCoffeeDataWithPrecomputedWeights&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForLinearRegression&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

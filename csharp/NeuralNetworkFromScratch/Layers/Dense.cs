@@ -7,11 +7,10 @@ public class Dense : ILayer
 	private readonly ActivationType _activationType;
 
 	private double[][] _weights;
-	private double[]   _biases;
-
+	private double[] _biases;
 
 	public Dense(int units, int inputSize, ActivationType activationType, double[][]? weights = null,
-		double[]?    biases = null)
+		double[]? biases = null)
 	{
 		_activationType = activationType;
 		_weights = new double[inputSize][];
@@ -48,10 +47,10 @@ public class Dense : ILayer
 	}
 
 	public int GetInputSize() => _weights.Length;
-	public int GetUnits()     => _weights[0].Length;
+	public int GetUnits() => _weights[0].Length;
 
 	public double[][] GetWeights() => _weights;
-	public double[]   GetBiases()  => _biases;
+	public double[] GetBiases() => _biases;
 
 	public void SetWeightsAndBiases(double[][] weights, double[] biases)
 	{
@@ -76,11 +75,17 @@ public class Dense : ILayer
 		_biases = biases;
 	}
 
-	public double[] Forward(double[] x) =>
-		Activation.Forward(_activationType, x, _weights, _biases);
+public double[] Forward(double[] x) => Forward(x, new double[GetUnits()]);
+    public double[] Forward(double[] x, double[] outputCache) => Activation.Forward(_activationType, x, _weights, _biases, outputCache);
 
-	public (double[][] dw, double[] db, double[][] dx) Backward(double[] x, double[] o) =>
-		Activation.Backward(_activationType, x, _weights, _biases, o);
+    public (double[][] dw, double[] db, double[][] dx) Backward(double[] x, double[] o, LayerCache cache)
+	{
+		// Use pre-allocated cache arrays
+		var (dw, db, dx) = Activation.Backward(_activationType, x, _weights, _biases, o, cache.Dw, cache.Db, cache.Dx);
+		return (dw, db, dx);
+	}
 
 	public double[][] Forward(double[][] X) => X.Select(Forward).ToArray();
+
+	public LayerCache CreateCache() => new LayerCache(GetInputSize(), GetUnits());
 }
