@@ -2,7 +2,6 @@
 
 namespace NeuralNetworkFromScratch.Regularizers;
 
-[Obsolete("Experimental could not work")]
 public class L2Regularizer : IKernelRegularizer
 {
 	private readonly double _lambda;

@@ -41,10 +41,12 @@ public class Model
 	public double[][] Predict(double[][] X) => X.Select(Predict).ToArray();
 
 
-	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10)
+	public void Fit(double[][] X, double[] Y, ILossCalc lossCalc, int epochs = 1000, double learningRate = 0.001, int batchSize = 16, int progressLogCount = 10,
+		bool                   initailizeWeights = true)
 	{
-		foreach (var layer in _layers)
-			layer.InitializeWeightsForTraining(_random);
+		if (initailizeWeights)
+			foreach (var layer in _layers)
+				layer.InitializeWeightsForTraining(_random);
 
 		InitializeCaches(batchSize);
 
@@ -269,8 +271,8 @@ public class Model
 			sb.AppendLine($"Layer {i}");
 			for (var unit = 0; unit < layer.GetUnits(); unit++)
 			{
-				for (var j = 0; j < layer.GetInputSize(); j++) sb.Append($"{w[j][unit]:F2}, ");
-				sb.AppendLine($"{b[unit]:F2}");
+				sb.Append($"[{string.Join(", ", w.Select(x => x[unit])):F2}]");
+				sb.AppendLine($" {b[unit]:F2}");
 			}
 		}
 

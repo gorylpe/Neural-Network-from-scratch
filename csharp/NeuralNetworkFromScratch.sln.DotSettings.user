@@ -14,5 +14,10 @@
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestCoffeeDataWithPrecomputedWeights&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForLinearRegression&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Tests.TestModelForLinearRegressionWithRegularization&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.L2RegularizationTests.TestL2RegularizationEffect&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Mnist1Tests.TestLeakyReLU&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Mnist1Tests.TestReLU&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Mnist1Tests.TestReLUWithL2Regularization&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::3EF6D359-3FC8-48CC-AE4A-582360408496::net9.0::Tests.Mnist1Tests.TestSigmoid&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

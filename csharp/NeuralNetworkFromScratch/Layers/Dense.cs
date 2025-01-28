@@ -67,7 +67,8 @@ public class Dense : ILayer
 			throw new ArgumentException("Weight size must be equal to input size. (number of features)");
 		if (weights[0].Length != GetUnits())
 			throw new ArgumentException("Single weight size must be equal to number of units.");
-		_weights = weights;
+		for (var i = 0; i < weights.Length; i++) 
+			Array.Copy(weights[i], 0, _weights[i], 0, weights[i].Length);
 	}
 
 	public void SetBiases(double[] biases)
@@ -75,7 +76,7 @@ public class Dense : ILayer
 		if (biases.Length != GetUnits())
 			throw new ArgumentException("Biases size must be equal to number of units.");
 
-		_biases = biases;
+		Array.Copy(biases, 0, _biases, 0, biases.Length);
 	}
 
 	public (double RegularizationLoss, double[] Activations) Forward(double[] x, double[] outputCache)
